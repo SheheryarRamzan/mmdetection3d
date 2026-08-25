@@ -9,7 +9,7 @@ Output:
 
 Usage:
     python tools/dataset_converters/pandaset_converter.py \
-        --pandaset-root /swmotion-user-data/datasets/pandaset/sequences \
+        --pandaset-root data/pandaset/sequences \
         --out-dir data/pandaset \
         --workers 8
 """
