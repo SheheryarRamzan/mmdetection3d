@@ -16,8 +16,8 @@ data_root = 'data/pandaset/'
 ann_file = 'pandaset_pandar64_infos_test.pkl'
 
 class_names = [
-    'car', 'truck', 'trailer', 'bus', 'construction_vehicle',
-    'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
+    'car', 'truck', 'trailer', 'bus', 'construction_vehicle', 'bicycle',
+    'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
 ]
 point_cloud_range = [-50, -50, -5, 50, 50, 3]
 input_modality = dict(use_lidar=True, use_camera=False)
@@ -45,9 +45,7 @@ test_dataloader = dict(
         metainfo=metainfo,
         box_type_3d='LiDAR'))
 
-test_evaluator = dict(
-    type='PandaSetMetric',
-    ann_file=data_root + ann_file)
+test_evaluator = dict(type='PandaSetMetric', ann_file=data_root + ann_file)
 test_cfg = dict()
 
 val_dataloader = test_dataloader

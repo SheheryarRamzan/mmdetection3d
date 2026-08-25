@@ -1,6 +1,7 @@
 # PandaSet dataset settings for 3D object detection
 # PandaSet features dual LiDAR (Pandar64 + PandarGT) in world coordinates.
-# Points are transformed to ego-centric frame on-the-fly by LoadPointsFromPandaSet.
+# Points are transformed to ego-centric frame on-the-fly
+# by LoadPointsFromPandaSet.
 point_cloud_range = [-50, -50, -5, 50, 50, 3]
 
 # Use the same 10 classes as nuScenes for cross-dataset evaluation

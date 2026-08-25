@@ -21,9 +21,9 @@ import argparse
 import json
 import os
 import pickle
+from multiprocessing import Pool
 
 import numpy as np
-from multiprocessing import Pool
 
 SKIP_DIRS = {'pkls', 'cloud_bin', 'cloud_pcd'}
 
@@ -32,14 +32,15 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Convert PandaSet .pkl point clouds to .bin/.pcd')
     parser.add_argument(
-        '--pandaset-root', required=True,
+        '--pandaset-root',
+        required=True,
         help='Path to pandaset sequences directory')
     parser.add_argument(
-        '--out-dir', required=True,
+        '--out-dir',
+        required=True,
         help='Output directory (cloud_bin/ and cloud_pcd/ created inside)')
     parser.add_argument(
-        '--workers', type=int, default=8,
-        help='Number of parallel workers')
+        '--workers', type=int, default=8, help='Number of parallel workers')
     return parser.parse_args()
 
 
@@ -60,19 +61,17 @@ def write_pcd_binary(filepath, points):
     n = len(points)
     points_f32 = points.astype(np.float32)
     with open(filepath, 'wb') as f:
-        header = (
-            "# .PCD v0.7 - Point Cloud Data file format\n"
-            "VERSION 0.7\n"
-            "FIELDS x y z intensity\n"
-            "SIZE 4 4 4 4\n"
-            "TYPE F F F F\n"
-            "COUNT 1 1 1 1\n"
-            f"WIDTH {n}\n"
-            "HEIGHT 1\n"
-            "VIEWPOINT 0 0 0 1 0 0 0\n"
-            f"POINTS {n}\n"
-            "DATA binary\n"
-        )
+        header = ('# .PCD v0.7 - Point Cloud Data file format\n'
+                  'VERSION 0.7\n'
+                  'FIELDS x y z intensity\n'
+                  'SIZE 4 4 4 4\n'
+                  'TYPE F F F F\n'
+                  'COUNT 1 1 1 1\n'
+                  f'WIDTH {n}\n'
+                  'HEIGHT 1\n'
+                  'VIEWPOINT 0 0 0 1 0 0 0\n'
+                  f'POINTS {n}\n'
+                  'DATA binary\n')
         f.write(header.encode('ascii'))
         f.write(points_f32.tobytes())
 
@@ -90,8 +89,8 @@ def process_sequence(args):
     with open(poses_file, 'r') as f:
         poses = json.load(f)
 
-    frame_files = sorted([f for f in os.listdir(lidar_dir)
-                          if f.endswith('.pkl')])
+    frame_files = sorted(
+        [f for f in os.listdir(lidar_dir) if f.endswith('.pkl')])
     converted = 0
 
     for frame_file in frame_files:
@@ -121,8 +120,8 @@ def process_sequence(args):
             if mask.sum() == 0:
                 continue
 
-            pts = np.column_stack(
-                [ego_xyz[mask], intensity[mask]]).astype(np.float32)
+            pts = np.column_stack([ego_xyz[mask],
+                                   intensity[mask]]).astype(np.float32)
 
             bin_dir = os.path.join(out_bin, sensor_name, seq_id)
             os.makedirs(bin_dir, exist_ok=True)
@@ -144,8 +143,10 @@ def main():
     out_pcd = os.path.join(args.out_dir, 'cloud_pcd')
 
     all_entries = sorted(os.listdir(pandaset_root))
-    sequences = [e for e in all_entries if e not in SKIP_DIRS and
-                 os.path.isdir(os.path.join(pandaset_root, e, 'lidar'))]
+    sequences = [
+        e for e in all_entries if e not in SKIP_DIRS
+        and os.path.isdir(os.path.join(pandaset_root, e, 'lidar'))
+    ]
 
     print(f'Found {len(sequences)} sequences')
     print(f'Output .bin: {out_bin}')

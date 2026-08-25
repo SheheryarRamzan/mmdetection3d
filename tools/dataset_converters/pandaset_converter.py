@@ -24,10 +24,9 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.transform import Rotation
 
-NUSCENES_CLASSES = (
-    'car', 'truck', 'trailer', 'bus', 'construction_vehicle',
-    'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
-)
+NUSCENES_CLASSES = ('car', 'truck', 'trailer', 'bus', 'construction_vehicle',
+                    'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone',
+                    'barrier')
 
 LABEL_MAP = {
     'Car': 'car',
@@ -54,7 +53,8 @@ def pose_to_matrix(pose_dict):
     """Convert PandaSet pose dict to 4x4 homogeneous matrix."""
     pos = pose_dict['position']
     heading = pose_dict['heading']
-    r = Rotation.from_quat([heading['x'], heading['y'], heading['z'], heading['w']])
+    r = Rotation.from_quat(
+        [heading['x'], heading['y'], heading['z'], heading['w']])
     mat = np.eye(4)
     mat[:3, :3] = r.as_matrix()
     mat[:3, 3] = [pos['x'], pos['y'], pos['z']]
@@ -70,7 +70,10 @@ def transform_box_to_ego(position, yaw, inv_pose, pose_yaw):
 
 
 def process_sequence(seq_id, pandaset_root):
-    """Process all frames of one sequence. Returns (list_64, list_gt)."""
+    """Process all frames of one sequence.
+
+    Returns (list_64, list_gt).
+    """
     seq_path = os.path.join(pandaset_root, seq_id)
     poses_file = os.path.join(seq_path, 'lidar', 'poses.json')
 
@@ -83,7 +86,8 @@ def process_sequence(seq_id, pandaset_root):
     lidar_dir = os.path.join(seq_path, 'lidar')
     cuboid_dir = os.path.join(seq_path, 'annotations', 'cuboids')
 
-    frame_files = sorted([f for f in os.listdir(lidar_dir) if f.endswith('.pkl')])
+    frame_files = sorted(
+        [f for f in os.listdir(lidar_dir) if f.endswith('.pkl')])
 
     results_64 = []
     results_gt = []
@@ -117,28 +121,37 @@ def process_sequence(seq_id, pandaset_root):
             nus_class = LABEL_MAP[label]
             class_idx = NUSCENES_CLASSES.index(nus_class)
 
-            position = np.array([row['position.x'], row['position.y'], row['position.z']])
+            position = np.array(
+                [row['position.x'], row['position.y'], row['position.z']])
             yaw = row['yaw']
             dim_l = row['dimensions.y']
             dim_w = row['dimensions.x']
             dim_h = row['dimensions.z']
 
-            ego_pos, ego_yaw = transform_box_to_ego(position, yaw, inv_pose, pose_yaw)
+            ego_pos, ego_yaw = transform_box_to_ego(position, yaw, inv_pose,
+                                                    pose_yaw)
 
             # Convention alignment:
-            # PandaSet: yaw=0 → length along Y. MMDet3D: yaw=0 → length along X.
+            # PandaSet: yaw=0 → length along Y.
+            # MMDet3D: yaw=0 → length along X.
             ego_yaw = ego_yaw + np.pi / 2
             # PandaSet: z = box center. nuScenes model: z = box bottom.
             ego_pos[2] = ego_pos[2] - dim_h / 2.0
 
             instances.append({
                 'bbox_3d': [
-                    float(ego_pos[0]), float(ego_pos[1]), float(ego_pos[2]),
-                    float(dim_l), float(dim_w), float(dim_h),
+                    float(ego_pos[0]),
+                    float(ego_pos[1]),
+                    float(ego_pos[2]),
+                    float(dim_l),
+                    float(dim_w),
+                    float(dim_h),
                     float(ego_yaw)
                 ],
-                'bbox_label_3d': class_idx,
-                'bbox_3d_isvalid': True,
+                'bbox_label_3d':
+                class_idx,
+                'bbox_3d_isvalid':
+                True,
             })
 
         sample_id = f'{seq_id}_{frame_idx:02d}'
@@ -201,18 +214,20 @@ def main():
 
     if args.workers > 1:
         with ProcessPoolExecutor(max_workers=args.workers) as executor:
-            futures = {executor.submit(_process_sequence_wrapper, t): t[0]
-                       for t in tasks}
+            futures = {
+                executor.submit(_process_sequence_wrapper, t): t[0]
+                for t in tasks
+            }
             done = 0
             for future in as_completed(futures):
                 done += 1
-                seq = futures[future]
                 r64, rgt = future.result()
                 all_64.extend(r64)
                 all_gt.extend(rgt)
                 if done % 10 == 0:
                     print(f'  Sequences done: {done}/{len(sequences)} '
-                          f'(frames so far: {len(all_64)} Pandar64, {len(all_gt)} PandarGT)')
+                          f'(frames so far: {len(all_64)} Pandar64, '
+                          f'{len(all_gt)} PandarGT)')
     else:
         for i, t in enumerate(tasks):
             r64, rgt = _process_sequence_wrapper(t)
@@ -224,7 +239,8 @@ def main():
     all_64.sort(key=lambda x: x['sample_idx'])
     all_gt.sort(key=lambda x: x['sample_idx'])
 
-    for data_list, name in [(all_64, 'pandaset_pandar64'), (all_gt, 'pandaset_pandargt')]:
+    for data_list, name in [(all_64, 'pandaset_pandar64'),
+                            (all_gt, 'pandaset_pandargt')]:
         info_pkl = {
             'metainfo': {
                 'CLASSES': NUSCENES_CLASSES,
@@ -243,7 +259,8 @@ def main():
         print(f'  Frames: {len(data_list)}')
         print(f'  Total instances: {total_inst}')
 
-    print('\nDone! Use LoadPointsFromPandaSet pipeline transform for inference.')
+    print('\nDone! Use LoadPointsFromPandaSet pipeline '
+          'transform for inference.')
 
 
 if __name__ == '__main__':

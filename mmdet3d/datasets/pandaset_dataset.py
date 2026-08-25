@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 """PandaSet dataset for MMDetection3D (evaluation only, no training)."""
 
 import numpy as np
@@ -11,14 +12,14 @@ from .det3d_dataset import Det3DDataset
 class PandaSetDataset(Det3DDataset):
     """PandaSet dataset mapped to nuScenes 10-class taxonomy.
 
-    Used for cross-dataset evaluation: model trained on nuScenes,
-    tested on PandaSet data converted via pandaset_converter.py.
+    Used for cross-dataset evaluation: model trained on nuScenes, tested on
+    PandaSet data converted via pandaset_converter.py.
     """
 
     METAINFO = {
-        'classes': ('car', 'truck', 'trailer', 'bus', 'construction_vehicle',
-                    'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone',
-                    'barrier'),
+        'classes':
+        ('car', 'truck', 'trailer', 'bus', 'construction_vehicle', 'bicycle',
+         'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'),
     }
 
     def parse_ann_info(self, info):

@@ -1,15 +1,15 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 """On-the-fly PandaSet point cloud loading transform for MMDetection3D.
 
-Reads the original PandaSet .pkl files directly, applies ego transform,
-filters by sensor ID, and returns points in the standard format expected
-by the PointPillars (or any LiDAR-based) model.
+Reads the original PandaSet .pkl files directly, applies ego transform, filters
+by sensor ID, and returns points in the standard format expected by the
+PointPillars (or any LiDAR-based) model.
 """
 
 import numpy as np
 import pandas as pd
 from mmcv.transforms import BaseTransform
 
-from mmdet3d.datasets.transforms.loading import LoadPointsFromFile
 from mmdet3d.registry import TRANSFORMS
 from mmdet3d.structures.points import get_points_type
 

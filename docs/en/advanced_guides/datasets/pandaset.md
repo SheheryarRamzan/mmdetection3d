@@ -6,10 +6,10 @@ This page provides tutorials about the usage of MMDetection3D for PandaSet datas
 
 [PandaSet](https://pandaset.org/) is an autonomous driving dataset released by Hesai Technology and Scale AI. It features a **dual-LiDAR** system:
 
-| Sensor | Type | Beams | Coverage | Range |
-|--------|------|-------|----------|-------|
-| Pandar64 | Mechanical spinning | 64 | 360° | ~200m |
-| PandarGT | Solid-state | Dense forward array | ~60° | ~200m |
+| Sensor   | Type                | Beams               | Coverage | Range |
+| -------- | ------------------- | ------------------- | -------- | ----- |
+| Pandar64 | Mechanical spinning | 64                  | 360°     | ~200m |
+| PandarGT | Solid-state         | Dense forward array | ~60°     | ~200m |
 
 The dataset contains 103 sequences × 80 frames = 8,240 frames, with 28 cuboid annotation categories.
 
@@ -77,18 +77,18 @@ PandaSet stores annotations in **world coordinates**. The converter handles:
 
 PandaSet has 28 cuboid categories. For cross-dataset evaluation with nuScenes models, they are mapped to 10 classes:
 
-| nuScenes Class | PandaSet Labels |
-|----------------|-----------------|
-| car | Car, Pickup Truck |
-| truck | Medium-sized Truck |
-| trailer | Towed Object |
-| bus | Bus / RV |
-| construction_vehicle | Construction Vehicle |
-| bicycle | Bicycle |
-| motorcycle | Motorcycle |
-| pedestrian | Pedestrian |
-| traffic_cone | Cones |
-| barrier | Road Barriers, Temporary Construction Barriers |
+| nuScenes Class       | PandaSet Labels                                |
+| -------------------- | ---------------------------------------------- |
+| car                  | Car, Pickup Truck                              |
+| truck                | Medium-sized Truck                             |
+| trailer              | Towed Object                                   |
+| bus                  | Bus / RV                                       |
+| construction_vehicle | Construction Vehicle                           |
+| bicycle              | Bicycle                                        |
+| motorcycle           | Motorcycle                                     |
+| pedestrian           | Pedestrian                                     |
+| traffic_cone         | Cones                                          |
+| barrier              | Road Barriers, Temporary Construction Barriers |
 
 Unmapped PandaSet labels (e.g., "Animals", "Emergency Vehicle", "Train") are ignored.
 
@@ -126,20 +126,20 @@ python tools/test.py \
 
 #### PointPillars FPN (nuScenes pretrained → PandaSet Pandar64)
 
-| Metric | Value | Notes |
-|--------|-------|-------|
-| mAP | 0.072 | Cross-dataset (vs 0.40 on nuScenes val) |
-| Car AP | 0.47 | Best transferring class |
-| Pedestrian AP | 0.21 | Second best |
-| NDS (partial) | 0.18 | No velocity/attribute errors |
-| Car AP (0-25m) | 0.72 | Strong near-range performance |
+| Metric         | Value | Notes                                   |
+| -------------- | ----- | --------------------------------------- |
+| mAP            | 0.072 | Cross-dataset (vs 0.40 on nuScenes val) |
+| Car AP         | 0.47  | Best transferring class                 |
+| Pedestrian AP  | 0.21  | Second best                             |
+| NDS (partial)  | 0.18  | No velocity/attribute errors            |
+| Car AP (0-25m) | 0.72  | Strong near-range performance           |
 
 #### PointPillars FPN (nuScenes pretrained → PandaSet PandarGT)
 
-| Metric | Value | Notes |
-|--------|-------|-------|
-| mAP | 0.006 | PandarGT is incompatible with 360° model |
-| Car AP | 0.05 | Severely degraded |
+| Metric | Value | Notes                                    |
+| ------ | ----- | ---------------------------------------- |
+| mAP    | 0.006 | PandarGT is incompatible with 360° model |
+| Car AP | 0.05  | Severely degraded                        |
 
 **Note:** PandarGT's 60° FOV is architecturally incompatible with models trained on 360° data. Only Pandar64 is suitable for cross-dataset evaluation with nuScenes/360° models.
 
@@ -148,7 +148,7 @@ python tools/test.py \
 The overall mAP (~7%) is significantly lower than nuScenes val (~40%) due to:
 
 1. **Sensor difference**: Hesai Pandar64 (64-beam) vs Velodyne VLP-32C (32-beam) — different point density and beam patterns
-2. **4th channel mismatch**: nuScenes model expects timestamp (≈0), PandaSet provides intensity (normalized to [0,1])
+2. **4th channel mismatch**: nuScenes model expects timestamp (≈0), PandaSet provides intensity (normalized to \[0,1\])
 3. **Annotation mismatch**: Some classes have different physical definitions (e.g., "trailer" is 3.85m in PandaSet vs 12.3m in nuScenes)
 4. **Size mismatch**: Objects like barriers have completely different dimensions between datasets
 
@@ -161,7 +161,7 @@ PandaSet uses an on-the-fly loading approach via `LoadPointsFromPandaSet`:
 1. Reads original `.pkl` files (Pandas DataFrames with columns: x, y, z, i, t, d)
 2. Filters by sensor ID (d=0 for Pandar64, d=1 for PandarGT)
 3. Transforms world coordinates to ego-centric frame using pose matrix
-4. Normalizes intensity from [0, 255] to [0, 1]
+4. Normalizes intensity from \[0, 255\] to \[0, 1\]
 
 This avoids pre-converting ~22 GB of point clouds to `.bin` format.
 

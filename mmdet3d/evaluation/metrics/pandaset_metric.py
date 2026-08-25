@@ -11,15 +11,14 @@ Reference: Caesar et al., "nuScenes: A multimodal dataset for autonomous
 driving", CVPR 2020.
 """
 
-import numpy as np
-from typing import Dict, List, Optional, Sequence
 from collections import OrderedDict
+from typing import Dict, List, Optional, Sequence
 
+import numpy as np
 from mmengine.evaluator import BaseMetric
 from mmengine.logging import print_log
 
 from mmdet3d.registry import METRICS
-from mmdet3d.structures import LiDARInstance3DBoxes
 
 DIST_THRESHOLDS = [0.5, 1.0, 2.0, 4.0]
 TP_DIST_THRESHOLD = 2.0
@@ -30,7 +29,10 @@ def center_distance_2d(box_a, box_b):
     return np.sqrt((box_a[0] - box_b[0])**2 + (box_a[1] - box_b[1])**2)
 
 
-def accumulate_ap(all_scores, all_matches, total_gt, min_recall=0.1,
+def accumulate_ap(all_scores,
+                  all_matches,
+                  total_gt,
+                  min_recall=0.1,
                   min_precision=0.1):
     """Compute AP using nuScenes protocol.
 
@@ -134,9 +136,9 @@ def compute_scale_error(dt_box, gt_box):
     if vol_dt <= 0 or vol_gt <= 0:
         return 1.0
 
-    inter = (min(dt_dims[0], gt_dims[0]) *
-             min(dt_dims[1], gt_dims[1]) *
-             min(dt_dims[2], gt_dims[2]))
+    inter = (
+        min(dt_dims[0], gt_dims[0]) * min(dt_dims[1], gt_dims[1]) *
+        min(dt_dims[2], gt_dims[2]))
     iou = inter / (vol_dt + vol_gt - inter)
     return 1.0 - iou
 
@@ -216,8 +218,10 @@ class PandaSetMetric(BaseMetric):
     def compute_metrics(self, results: List[dict]) -> Dict[str, float]:
         """Compute nuScenes-style metrics: mAP, mATE, mASE, mAOE, NDS."""
         print_log('\n' + '=' * 70, logger='current')
-        print_log('PandaSet Evaluation (nuScenes-style center-distance protocol)',
-                  logger='current')
+        print_log(
+            'PandaSet Evaluation (nuScenes-style '
+            'center-distance protocol)',
+            logger='current')
         print_log('=' * 70, logger='current')
 
         all_dt_boxes = [r['bboxes_3d'] for r in results]
@@ -234,10 +238,9 @@ class PandaSetMetric(BaseMetric):
             # --- AP at each distance threshold ---
             aps_for_class = []
             for dist_th in DIST_THRESHOLDS:
-                ap = self._eval_class_ap(
-                    all_dt_boxes, all_dt_scores, all_dt_labels,
-                    all_gt_boxes, all_gt_labels,
-                    cls_idx, dist_th)
+                ap = self._eval_class_ap(all_dt_boxes, all_dt_scores,
+                                         all_dt_labels, all_gt_boxes,
+                                         all_gt_labels, cls_idx, dist_th)
                 aps_for_class.append(ap)
                 ap_dict[f'{cls_name}/AP_dist_{dist_th}'] = ap
 
@@ -246,10 +249,10 @@ class PandaSetMetric(BaseMetric):
             class_aps.append(mean_ap_cls)
 
             # --- TP errors at 2m threshold ---
-            tp_errors = self._eval_class_tp_errors(
-                all_dt_boxes, all_dt_scores, all_dt_labels,
-                all_gt_boxes, all_gt_labels,
-                cls_idx, TP_DIST_THRESHOLD)
+            tp_errors = self._eval_class_tp_errors(all_dt_boxes, all_dt_scores,
+                                                   all_dt_labels, all_gt_boxes,
+                                                   all_gt_labels, cls_idx,
+                                                   TP_DIST_THRESHOLD)
             class_tp_errors.append(tp_errors)
 
             if tp_errors is not None:
@@ -264,9 +267,15 @@ class PandaSetMetric(BaseMetric):
         # --- Aggregate metrics ---
         mAP = float(np.mean(class_aps))
 
-        ate_vals = [e['ate'] if e is not None else 1.0 for e in class_tp_errors]
-        ase_vals = [e['ase'] if e is not None else 1.0 for e in class_tp_errors]
-        aoe_vals = [e['aoe'] if e is not None else 1.0 for e in class_tp_errors]
+        ate_vals = [
+            e['ate'] if e is not None else 1.0 for e in class_tp_errors
+        ]
+        ase_vals = [
+            e['ase'] if e is not None else 1.0 for e in class_tp_errors
+        ]
+        aoe_vals = [
+            e['aoe'] if e is not None else 1.0 for e in class_tp_errors
+        ]
 
         mATE = float(np.mean(ate_vals))
         mASE = float(np.mean(ase_vals))
@@ -299,8 +308,8 @@ class PandaSetMetric(BaseMetric):
 
         # --- Distance-bin analysis ---
         dist_bin_results = self._compute_distance_bin_analysis(
-            all_dt_boxes, all_dt_scores, all_dt_labels,
-            all_gt_boxes, all_gt_labels)
+            all_dt_boxes, all_dt_scores, all_dt_labels, all_gt_boxes,
+            all_gt_labels)
         ap_dict.update(dist_bin_results)
 
         return ap_dict
@@ -313,8 +322,8 @@ class PandaSetMetric(BaseMetric):
         total_gt = 0
 
         for dt_boxes, dt_scores, dt_labels, gt_boxes, gt_labels in zip(
-                all_dt_boxes, all_dt_scores, all_dt_labels,
-                all_gt_boxes, all_gt_labels):
+                all_dt_boxes, all_dt_scores, all_dt_labels, all_gt_boxes,
+                all_gt_labels):
 
             dt_mask = dt_labels == class_id
             gt_mask = gt_labels == class_id
@@ -372,8 +381,8 @@ class PandaSetMetric(BaseMetric):
         total_gt = 0
 
         for dt_boxes, dt_scores, dt_labels, gt_boxes, gt_labels in zip(
-                all_dt_boxes, all_dt_scores, all_dt_labels,
-                all_gt_boxes, all_gt_labels):
+                all_dt_boxes, all_dt_scores, all_dt_labels, all_gt_boxes,
+                all_gt_labels):
 
             dt_mask = dt_labels == class_id
             gt_mask = gt_labels == class_id
@@ -431,8 +440,8 @@ class PandaSetMetric(BaseMetric):
         return compute_tp_errors(tp_list)
 
     def _compute_distance_bin_analysis(self, all_dt_boxes, all_dt_scores,
-                                        all_dt_labels, all_gt_boxes,
-                                        all_gt_labels):
+                                       all_dt_labels, all_gt_boxes,
+                                       all_gt_labels):
         """Compute per-distance-bin AP for each class.
 
         Bins: 0-25m (near-range), 25-50m (far-range).
@@ -443,8 +452,9 @@ class PandaSetMetric(BaseMetric):
         ap_dict = OrderedDict()
 
         print_log('\n' + '=' * 70, logger='current')
-        print_log('Distance-Bin Analysis (AP by BEV range from ego)',
-                  logger='current')
+        print_log(
+            'Distance-Bin Analysis (AP by BEV range from ego)',
+            logger='current')
         print_log('=' * 70, logger='current')
 
         header = f'\n{"Class":<25} '
@@ -458,7 +468,8 @@ class PandaSetMetric(BaseMetric):
         for cls_idx, cls_name in enumerate(self.classes):
             # Count total GT in range for this class
             total_gt_all = sum(
-                int((gt_labels == cls_idx).sum()) for gt_labels in all_gt_labels)
+                int((gt_labels == cls_idx).sum())
+                for gt_labels in all_gt_labels)
             if total_gt_all < 10:
                 continue
 
@@ -469,8 +480,8 @@ class PandaSetMetric(BaseMetric):
                 for dist_th in DIST_THRESHOLDS:
                     ap, n_gt = self._eval_class_ap_range(
                         all_dt_boxes, all_dt_scores, all_dt_labels,
-                        all_gt_boxes, all_gt_labels,
-                        cls_idx, dist_th, rmin, rmax)
+                        all_gt_boxes, all_gt_labels, cls_idx, dist_th, rmin,
+                        rmax)
                     bin_aps.append(ap)
                     bin_gt_count = n_gt
 
@@ -486,10 +497,10 @@ class PandaSetMetric(BaseMetric):
             # Full range AP (already computed, recompute for consistency)
             full_aps = []
             for dist_th in DIST_THRESHOLDS:
-                ap, _ = self._eval_class_ap_range(
-                    all_dt_boxes, all_dt_scores, all_dt_labels,
-                    all_gt_boxes, all_gt_labels,
-                    cls_idx, dist_th, 0, 50)
+                ap, _ = self._eval_class_ap_range(all_dt_boxes, all_dt_scores,
+                                                  all_dt_labels, all_gt_boxes,
+                                                  all_gt_labels, cls_idx,
+                                                  dist_th, 0, 50)
                 full_aps.append(ap)
             full_ap = float(np.mean(full_aps))
             row += f'{full_ap:<10.4f}'
@@ -498,8 +509,9 @@ class PandaSetMetric(BaseMetric):
             any_printed = True
 
         if not any_printed:
-            print_log('  (No classes with >= 10 GT objects in range)',
-                      logger='current')
+            print_log(
+                '  (No classes with >= 10 GT objects in range)',
+                logger='current')
 
         print_log('-' * 80 + '\n', logger='current')
         return ap_dict
@@ -507,8 +519,8 @@ class PandaSetMetric(BaseMetric):
     def _eval_class_ap_range(self, all_dt_boxes, all_dt_scores, all_dt_labels,
                              all_gt_boxes, all_gt_labels, class_id,
                              dist_threshold, range_min, range_max):
-        """Compute AP for one class at one distance threshold, filtered by
-        BEV distance range.
+        """Compute AP for one class at one distance threshold, filtered by BEV
+        distance range.
 
         Both GT and predictions are filtered to [range_min, range_max) BEV
         distance from ego before matching.
@@ -521,8 +533,8 @@ class PandaSetMetric(BaseMetric):
         total_gt = 0
 
         for dt_boxes, dt_scores, dt_labels, gt_boxes, gt_labels in zip(
-                all_dt_boxes, all_dt_scores, all_dt_labels,
-                all_gt_boxes, all_gt_labels):
+                all_dt_boxes, all_dt_scores, all_dt_labels, all_gt_boxes,
+                all_gt_labels):
 
             dt_mask = dt_labels == class_id
             gt_mask = gt_labels == class_id
@@ -533,16 +545,18 @@ class PandaSetMetric(BaseMetric):
 
             # Filter GT by BEV distance
             if len(gt_cls_boxes) > 0:
-                gt_dists = np.sqrt(
-                    gt_cls_boxes[:, 0]**2 + gt_cls_boxes[:, 1]**2)
-                gt_range_mask = (gt_dists >= range_min) & (gt_dists < range_max)
+                gt_dists = np.sqrt(gt_cls_boxes[:, 0]**2 +
+                                   gt_cls_boxes[:, 1]**2)
+                gt_range_mask = ((gt_dists >= range_min)
+                                 & (gt_dists < range_max))
                 gt_cls_boxes = gt_cls_boxes[gt_range_mask]
 
             # Filter predictions by BEV distance
             if len(dt_cls_boxes) > 0:
-                dt_dists = np.sqrt(
-                    dt_cls_boxes[:, 0]**2 + dt_cls_boxes[:, 1]**2)
-                dt_range_mask = (dt_dists >= range_min) & (dt_dists < range_max)
+                dt_dists = np.sqrt(dt_cls_boxes[:, 0]**2 +
+                                   dt_cls_boxes[:, 1]**2)
+                dt_range_mask = ((dt_dists >= range_min)
+                                 & (dt_dists < range_max))
                 dt_cls_boxes = dt_cls_boxes[dt_range_mask]
                 dt_cls_scores = dt_cls_scores[dt_range_mask]
 
@@ -584,12 +598,13 @@ class PandaSetMetric(BaseMetric):
         ap = accumulate_ap(all_scores, all_matches, total_gt)
         return ap, total_gt
 
-    def _print_results(self, class_aps, class_tp_errors, mAP, mATE, mASE,
-                       mAOE, nds, nds_partial):
+    def _print_results(self, class_aps, class_tp_errors, mAP, mATE, mASE, mAOE,
+                       nds, nds_partial):
         """Print results in nuScenes-style format."""
         sep = '-' * 70
         result_str = f'\n{sep}\n'
-        result_str += f'{"Object Class":<25} {"AP":<8} {"ATE":<8} {"ASE":<8} {"AOE":<8}\n'
+        result_str += (f'{"Object Class":<25} {"AP":<8} {"ATE":<8} '
+                       f'{"ASE":<8} {"AOE":<8}\n')
         result_str += f'{sep}\n'
 
         for cls_idx, cls_name in enumerate(self.classes):
@@ -603,15 +618,16 @@ class PandaSetMetric(BaseMetric):
                 ate_str = 'N/A'
                 ase_str = 'N/A'
                 aoe_str = 'N/A'
-            result_str += f'{cls_name:<25} {ap_str:<8} {ate_str:<8} {ase_str:<8} {aoe_str:<8}\n'
+            result_str += (f'{cls_name:<25} {ap_str:<8} {ate_str:<8} '
+                           f'{ase_str:<8} {aoe_str:<8}\n')
 
         result_str += f'{sep}\n'
         result_str += f'mAP:  {mAP:.4f}\n'
         result_str += f'mATE: {mATE:.4f}\n'
         result_str += f'mASE: {mASE:.4f}\n'
         result_str += f'mAOE: {mAOE:.4f}\n'
-        result_str += f'mAVE: N/A (no velocity in PandaSet)\n'
-        result_str += f'mAAE: N/A (no attributes in PandaSet)\n'
+        result_str += 'mAVE: N/A (no velocity in PandaSet)\n'
+        result_str += 'mAAE: N/A (no attributes in PandaSet)\n'
         result_str += f'NDS:  {nds:.4f} (with mAVE=1, mAAE=1)\n'
         result_str += f'NDS (partial, 3 TP metrics only): {nds_partial:.4f}\n'
         result_str += f'{sep}\n'
