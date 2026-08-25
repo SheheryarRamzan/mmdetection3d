@@ -12,8 +12,8 @@ _base_ = [
 ]
 
 # ── Dataset settings ─────────────────────────────────────────────────────────
-data_root = 'data/datasets/pandaset/'
-ann_file = 'pkls/pandaset_pandar64_infos_test.pkl'
+data_root = 'data/pandaset/'
+ann_file = 'pandaset_pandar64_infos_test.pkl'
 
 class_names = [
     'car', 'truck', 'trailer', 'bus', 'construction_vehicle',
